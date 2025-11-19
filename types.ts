@@ -24,6 +24,7 @@ export interface Sermon {
   date: string;
   description: string;
   imageUrl: string;
+  videoUrl?: string;
 }
 
 export interface Event {
@@ -39,7 +40,15 @@ export interface Meeting {
   title: string;
   host: string;
   startTime: string;
+  description: string;
   participants: number;
+}
+
+export interface LiveParticipant {
+  id: string;
+  name: string;
+  isHost: boolean;
+  muted: boolean;
 }
 
 export interface PrayerRequest {

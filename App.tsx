@@ -3,7 +3,7 @@ import Navigation from './components/Navigation';
 import { Page, UserRole, Sermon, Event, PrayerRequest, Donation, Meeting } from './types';
 import { getVerseOfDay, seedSermons, seedEvents, generatePrayerResponse } from './services/geminiService';
 import Meetings from './pages/Meetings';
-import { IconSearch, IconTrash, IconPlus } from './components/Icons';
+import { IconSearch, IconTrash, IconPlus, IconX, IconMapPin } from './components/Icons';
 
 // Simple localStorage wrapper with error handling
 const useStickyState = <T,>(key: string, defaultValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
@@ -30,7 +30,6 @@ const HomePage = ({ verse, setPage }: { verse: { text: string; ref: string } | n
         <h1 className="text-4xl md:text-6xl font-bold mb-4">Welcome Home</h1>
         <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">Connecting 1000 micro churches across the globe in one unified digital spirit.</p>
       </div>
-
       <div className="container mx-auto px-6 -mt-10">
         <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-3xl mx-auto">
           <h2 className="text-primary-600 font-bold tracking-wider uppercase text-xs mb-2">Verse of the Day</h2>
@@ -42,7 +41,6 @@ const HomePage = ({ verse, setPage }: { verse: { text: string; ref: string } | n
           ) : <div className="animate-pulse h-10 bg-slate-100 rounded"></div>}
         </div>
       </div>
-
       <div className="container mx-auto px-6 py-12 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
          <div onClick={() => setPage(Page.SERMONS)} className="cursor-pointer bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-t-4 border-blue-500">
             <h3 className="text-xl font-bold mb-2">Latest Sermons</h3>
@@ -60,7 +58,7 @@ const HomePage = ({ verse, setPage }: { verse: { text: string; ref: string } | n
     </div>
 );
 
-const SermonsPage = ({ sermons }: { sermons: Sermon[] }) => (
+const SermonsPage = ({ sermons, openVideoModal }: { sermons: Sermon[], openVideoModal: (url: string) => void }) => (
     <div className="container mx-auto p-6 animate-fade-in pb-20">
       <h2 className="text-3xl font-bold text-slate-800 mb-6">Sermon Library</h2>
       {sermons.length === 0 ? (
@@ -75,9 +73,15 @@ const SermonsPage = ({ sermons }: { sermons: Sermon[] }) => (
                 <h3 className="text-xl font-bold text-slate-800 mb-2">{sermon.title}</h3>
                 <p className="text-slate-500 text-sm mb-4">{sermon.speaker}</p>
                 <p className="text-slate-600 text-sm flex-1 line-clamp-3">{sermon.description}</p>
-                <button className="mt-4 w-full bg-slate-100 text-slate-700 py-2 rounded hover:bg-slate-200 font-medium">
-                  Watch / Listen
-                </button>
+                 {sermon.videoUrl ? (
+                    <button onClick={() => openVideoModal(sermon.videoUrl!)} className="mt-4 w-full bg-primary-600 text-white py-2 rounded font-medium hover:bg-primary-700">
+                        Watch Now
+                    </button>
+                 ) : (
+                    <button className="mt-4 w-full bg-slate-100 text-slate-500 py-2 rounded font-medium cursor-not-allowed">
+                        Video Unavailable
+                    </button>
+                 )}
               </div>
             </div>
           ))}
@@ -108,9 +112,15 @@ const EventsPage = ({ events }: { events: Event[] }) => (
                </div>
                <p className="text-slate-600">{event.description}</p>
             </div>
-            <button className="bg-white border-2 border-primary-600 text-primary-600 px-6 py-2 rounded-full font-semibold hover:bg-primary-50 transition">
-               RSVP
-            </button>
+            {!event.location.toLowerCase().includes('online') ? (
+                <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(event.location)}`} target="_blank" rel="noopener noreferrer" className="bg-white border-2 border-primary-600 text-primary-600 px-4 py-2 rounded-full font-semibold hover:bg-primary-50 transition flex items-center gap-2">
+                    <IconMapPin className="w-4 h-4" /> View Map
+                </a>
+            ) : (
+                <button className="bg-primary-600 text-white px-6 py-2 rounded-full font-semibold">
+                    Details
+                </button>
+            )}
           </div>
         ))}
       </div>
@@ -203,9 +213,7 @@ const GivingPage = ({ handleDonation }: { handleDonation: (d: Donation) => void 
         e.preventDefault();
         handleDonation({ id: Date.now().toString(), name: donorName || 'Anonymous', email, amount: parseFloat(amount), date: new Date().toISOString() });
         setSuccess(true);
-        setAmount('');
-        setDonorName('');
-        setEmail('');
+        setAmount(''); setDonorName(''); setEmail('');
         setTimeout(() => setSuccess(false), 5000);
     }
 
@@ -230,10 +238,7 @@ const GivingPage = ({ handleDonation }: { handleDonation: (d: Donation) => void 
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Custom Amount</label>
-                            <div className="relative">
-                                <span className="absolute left-3 top-2 text-slate-500">$</span>
-                                <input type="number" value={amount} onChange={e=>setAmount(e.target.value)} className="pl-8 w-full border border-slate-300 rounded p-2" />
-                            </div>
+                            <div className="relative"><span className="absolute left-3 top-2 text-slate-500">$</span><input type="number" value={amount} onChange={e=>setAmount(e.target.value)} className="pl-8 w-full border border-slate-300 rounded p-2" /></div>
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Name (Optional)</label>
@@ -243,9 +248,7 @@ const GivingPage = ({ handleDonation }: { handleDonation: (d: Donation) => void 
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label>
                             <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="w-full border border-slate-300 rounded p-2" />
                         </div>
-                        <button className="w-full bg-slate-800 text-white py-3 rounded-lg font-bold hover:bg-slate-900 shadow-lg">
-                            Process Secure Donation
-                        </button>
+                        <button className="w-full bg-slate-800 text-white py-3 rounded-lg font-bold hover:bg-slate-900 shadow-lg">Process Secure Donation</button>
                     </form>
                 )}
            </div>
@@ -257,7 +260,7 @@ const AdminPage = (props: any) => {
     const { userRole, handleLogin, prayers, setPrayers, sermons, setSermons, events, setEvents, meetings, setMeetings, donations, verse, setVerse } = props;
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [activeTab, setActiveTab] = useState<'PR' | 'SM' | 'EV' | 'MT' | 'DN' | 'SET'>('SM');
+    const [activeTab, setActiveTab] = useState<'SM' | 'EV' | 'MT' | 'PR' | 'DN' | 'SET'>('SM');
 
     const [newSermon, setNewSermon] = useState<Partial<Sermon>>({});
     const [newEvent, setNewEvent] = useState<Partial<Event>>({});
@@ -266,12 +269,8 @@ const AdminPage = (props: any) => {
 
     const handleAuth = (e: React.FormEvent) => {
         e.preventDefault();
-        if (password === '12345678') {
-            handleLogin(UserRole.ADMIN);
-            setError('');
-        } else {
-            setError('Invalid Password');
-        }
+        if (password === '12345678') { handleLogin(UserRole.ADMIN); setError(''); } 
+        else { setError('Invalid Password'); }
     };
 
     if (!userRole) {
@@ -282,7 +281,6 @@ const AdminPage = (props: any) => {
                     <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full border border-slate-300 rounded p-3 mb-4" placeholder="Enter Password" />
                     {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
                     <button className="w-full bg-primary-600 text-white py-3 rounded font-bold">Login</button>
-                    <p className="text-xs text-center mt-4 text-slate-400">Hint: 12345678</p>
                 </form>
             </div>
         );
@@ -292,19 +290,19 @@ const AdminPage = (props: any) => {
     const deletePrayer = (id: string) => setPrayers(prayers.filter((p: PrayerRequest) => p.id !== id));
     const addSermon = (e: React.FormEvent) => {
         e.preventDefault(); if (!newSermon.title) return;
-        setSermons([{ id: Date.now().toString(), title: newSermon.title, speaker: newSermon.speaker || 'TBD', date: newSermon.date || new Date().toLocaleDateString(), description: newSermon.description || '', imageUrl: newSermon.imageUrl || `https://picsum.photos/400/250?random=${Date.now()}` }, ...sermons]);
+        setSermons([{ id: Date.now().toString(), title: newSermon.title!, speaker: newSermon.speaker || 'TBD', date: newSermon.date || new Date().toLocaleDateString(), description: newSermon.description || '', imageUrl: newSermon.imageUrl || `https://picsum.photos/400/250?random=${Date.now()}`, videoUrl: newSermon.videoUrl }, ...sermons]);
         setNewSermon({});
     };
     const deleteSermon = (id: string) => setSermons(sermons.filter((s: Sermon) => s.id !== id));
     const addEvent = (e: React.FormEvent) => {
         e.preventDefault(); if (!newEvent.title) return;
-        setEvents([{ id: Date.now().toString(), title: newEvent.title, date: newEvent.date || 'TBD', location: newEvent.location || 'Online', description: newEvent.description || '' }, ...events]);
+        setEvents([{ id: Date.now().toString(), title: newEvent.title!, date: newEvent.date || 'TBD', location: newEvent.location || 'Online', description: newEvent.description || '' }, ...events]);
         setNewEvent({});
     };
     const deleteEvent = (id: string) => setEvents(events.filter((e: Event) => e.id !== id));
     const addMeeting = (e: React.FormEvent) => {
         e.preventDefault(); if (!newMeeting.title) return;
-        setMeetings([{ id: Date.now().toString(), title: newMeeting.title, host: newMeeting.host || 'Admin', startTime: newMeeting.startTime || 'TBD', participants: 0 }, ...meetings]);
+        setMeetings([{ id: Date.now().toString(), title: newMeeting.title!, host: newMeeting.host || 'Admin', startTime: newMeeting.startTime || 'TBD', description: newMeeting.description || '', participants: 0 }, ...meetings]);
         setNewMeeting({});
     };
     const deleteMeeting = (id: string) => setMeetings(meetings.filter((m: Meeting) => m.id !== id));
@@ -314,90 +312,71 @@ const AdminPage = (props: any) => {
         <div className="container mx-auto p-6 pb-20">
             <h2 className="text-3xl font-bold text-slate-800 mb-8">Admin Dashboard</h2>
             <div className="flex flex-col md:flex-row gap-8">
-                <div className="md:w-1/4">
-                    <div className="space-y-2 sticky top-24">
-                        {(['SM', 'EV', 'MT', 'PR', 'DN', 'SET'] as const).map(tab => (
-                            <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full text-left px-4 py-2 rounded text-sm font-bold transition-colors ${activeTab === tab ? 'bg-primary-600 text-white' : 'bg-white text-slate-600 shadow-sm hover:bg-slate-50'}`}>
-                                {tab === 'PR' ? 'Prayers' : tab === 'SM' ? 'Sermons' : tab === 'EV' ? 'Events' : tab === 'MT' ? 'Meetings' : tab === 'DN' ? 'Donations' : 'Settings'}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+                <div className="md:w-1/4"><div className="space-y-2 sticky top-24">
+                    {(['SM', 'EV', 'MT', 'PR', 'DN', 'SET'] as const).map(tab => (
+                        <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full text-left px-4 py-2 rounded text-sm font-bold ${activeTab === tab ? 'bg-primary-600 text-white' : 'bg-white hover:bg-slate-50'}`}>
+                            {tab === 'PR' ? 'Prayers' : tab === 'SM' ? 'Sermons' : tab === 'EV' ? 'Events' : tab === 'MT' ? 'Meetings' : tab === 'DN' ? 'Donations' : 'Settings'}
+                        </button>
+                    ))}
+                </div></div>
                 <div className="md:w-3/4">
                 {activeTab === 'SM' && <div className="space-y-6">
                     <div className="bg-white rounded-xl shadow p-6">
-                        <h3 className="font-bold text-slate-800 mb-4 text-xl flex items-center gap-2"><IconPlus className="w-5 h-5"/> Add Sermon</h3>
+                        <h3 className="font-bold text-xl mb-4">Add Sermon</h3>
                         <form onSubmit={addSermon} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input placeholder="Title" value={newSermon.title || ''} onChange={e => setNewSermon({...newSermon, title: e.target.value})} className="w-full border p-2 rounded text-sm" />
                             <input placeholder="Speaker" value={newSermon.speaker || ''} onChange={e => setNewSermon({...newSermon, speaker: e.target.value})} className="w-full border p-2 rounded text-sm" />
                             <input placeholder="Date" value={newSermon.date || ''} onChange={e => setNewSermon({...newSermon, date: e.target.value})} className="w-full border p-2 rounded text-sm" />
                             <input placeholder="Image URL" value={newSermon.imageUrl || ''} onChange={e => setNewSermon({...newSermon, imageUrl: e.target.value})} className="w-full border p-2 rounded text-sm" />
+                            <input placeholder="Video URL (e.g. YouTube)" value={newSermon.videoUrl || ''} onChange={e => setNewSermon({...newSermon, videoUrl: e.target.value})} className="w-full border p-2 rounded text-sm md:col-span-2" />
                             <textarea placeholder="Description" value={newSermon.description || ''} onChange={e => setNewSermon({...newSermon, description: e.target.value})} className="w-full border p-2 rounded text-sm md:col-span-2" />
-                            <button className="w-full bg-primary-600 text-white py-2 rounded font-bold hover:bg-primary-700 md:col-span-2">Publish Sermon</button>
+                            <button className="w-full bg-primary-600 text-white py-2 rounded font-bold md:col-span-2">Publish Sermon</button>
                         </form>
                     </div>
-                    {sermons.map((s: Sermon) => <div key={s.id} className="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center"><div><p className="font-bold">{s.title}</p><p className="text-xs text-slate-500">{s.speaker} | {s.date}</p></div><button onClick={() => deleteSermon(s.id)} className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50"><IconTrash className="w-4 h-4" /></button></div>)}
+                    {sermons.map((s: Sermon) => <div key={s.id} className="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center"><div><p className="font-bold">{s.title}</p><p className="text-xs text-slate-500">{s.speaker} | {s.date}</p></div><button onClick={() => deleteSermon(s.id)} className="text-red-500 p-2"><IconTrash className="w-4 h-4" /></button></div>)}
                 </div>}
 
                 {activeTab === 'EV' && <div className="space-y-6">
-                    <div className="bg-white rounded-xl shadow p-6">
-                        <h3 className="font-bold text-slate-800 mb-4 text-xl">Add Event</h3>
+                    <div className="bg-white rounded-xl shadow p-6"><h3 className="font-bold text-xl mb-4">Add Event</h3>
                         <form onSubmit={addEvent} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input placeholder="Title" value={newEvent.title || ''} onChange={e => setNewEvent({...newEvent, title: e.target.value})} className="w-full border p-2 rounded text-sm" />
-                            <input placeholder="Date (e.g., Saturday, 12:00 PM)" value={newEvent.date || ''} onChange={e => setNewEvent({...newEvent, date: e.target.value})} className="w-full border p-2 rounded text-sm" />
+                            <input placeholder="Date" value={newEvent.date || ''} onChange={e => setNewEvent({...newEvent, date: e.target.value})} className="w-full border p-2 rounded text-sm" />
                             <input placeholder="Location" value={newEvent.location || ''} onChange={e => setNewEvent({...newEvent, location: e.target.value})} className="w-full border p-2 rounded text-sm md:col-span-2" />
                             <textarea placeholder="Description" value={newEvent.description || ''} onChange={e => setNewEvent({...newEvent, description: e.target.value})} className="w-full border p-2 rounded text-sm md:col-span-2" />
-                            <button className="w-full bg-primary-600 text-white py-2 rounded font-bold hover:bg-primary-700 md:col-span-2">Create Event</button>
+                            <button className="w-full bg-primary-600 text-white py-2 rounded font-bold md:col-span-2">Create Event</button>
                         </form>
                     </div>
-                    {events.map((e: Event) => <div key={e.id} className="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center"><div><p className="font-bold">{e.title}</p><p className="text-xs text-slate-500">{e.location} | {e.date}</p></div><button onClick={() => deleteEvent(e.id)} className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50"><IconTrash className="w-4 h-4" /></button></div>)}
+                    {events.map((e: Event) => <div key={e.id} className="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center"><div><p className="font-bold">{e.title}</p><p className="text-xs text-slate-500">{e.location} | {e.date}</p></div><button onClick={() => deleteEvent(e.id)} className="text-red-500 p-2"><IconTrash className="w-4 h-4" /></button></div>)}
                 </div>}
 
                 {activeTab === 'MT' && <div className="space-y-6">
-                    <div className="bg-white rounded-xl shadow p-6">
-                        <h3 className="font-bold text-slate-800 mb-4 text-xl">Schedule Meeting</h3>
+                    <div className="bg-white rounded-xl shadow p-6"><h3 className="font-bold text-xl mb-4">Schedule Meeting</h3>
                         <form onSubmit={addMeeting} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                            <input placeholder="Title" value={newMeeting.title || ''} onChange={e => setNewMeeting({...newMeeting, title: e.target.value})} className="w-full border p-2 rounded text-sm" />
                            <input placeholder="Host Name" value={newMeeting.host || ''} onChange={e => setNewMeeting({...newMeeting, host: e.target.value})} className="w-full border p-2 rounded text-sm" />
-                           <input placeholder="Start Time (e.g. Today 5PM)" value={newMeeting.startTime || ''} onChange={e => setNewMeeting({...newMeeting, startTime: e.target.value})} className="w-full border p-2 rounded text-sm md:col-span-2" />
-                           <button className="w-full bg-primary-600 text-white py-2 rounded font-bold hover:bg-primary-700 md:col-span-2">Schedule</button>
+                           <input placeholder="Start Time" value={newMeeting.startTime || ''} onChange={e => setNewMeeting({...newMeeting, startTime: e.target.value})} className="w-full border p-2 rounded text-sm md:col-span-2" />
+                           <textarea placeholder="Description" value={newMeeting.description || ''} onChange={e => setNewMeeting({...newMeeting, description: e.target.value})} className="w-full border p-2 rounded text-sm md:col-span-2" />
+                           <button className="w-full bg-primary-600 text-white py-2 rounded font-bold md:col-span-2">Schedule</button>
                         </form>
                     </div>
-                    {meetings.map((m: Meeting) => <div key={m.id} className="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center"><div><p className="font-bold">{m.title}</p><p className="text-xs text-slate-500">Host: {m.host} | {m.startTime}</p></div><button onClick={() => deleteMeeting(m.id)} className="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50"><IconTrash className="w-4 h-4" /></button></div>)}
+                    {meetings.map((m: Meeting) => <div key={m.id} className="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center"><div><p className="font-bold">{m.title}</p><p className="text-xs text-slate-500">Host: {m.host} | {m.startTime}</p></div><button onClick={() => deleteMeeting(m.id)} className="text-red-500 p-2"><IconTrash className="w-4 h-4" /></button></div>)}
                 </div>}
 
-                {activeTab === 'PR' && <div className="bg-white rounded-xl shadow overflow-hidden">
-                    <div className="p-4 border-b"><h3 className="font-bold text-slate-700">Prayer Requests</h3></div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm text-left">
-                            <thead className="bg-slate-100 text-slate-500 uppercase"><tr><th className="p-4">Name</th><th className="p-4">Content</th><th className="p-4">Status</th><th className="p-4">Action</th></tr></thead>
-                            <tbody>{prayers.map((p: PrayerRequest) => <tr key={p.id} className="border-t hover:bg-slate-50"><td className="p-4 font-medium">{p.name}</td><td className="p-4 max-w-xs truncate">{p.content}</td><td className="p-4"><span className={`px-2 py-1 rounded text-xs font-bold ${p.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{p.status}</span></td><td className="p-4 flex gap-2">{p.status === 'PENDING' && <button onClick={() => approvePrayer(p.id)} className="text-green-600 font-bold hover:underline">Approve</button>}<button onClick={() => deletePrayer(p.id)} className="text-red-500 hover:underline">Delete</button></td></tr>)}</tbody>
-                        </table>
-                    </div>
-                </div>}
+                {activeTab === 'PR' && <div className="bg-white rounded-xl shadow overflow-hidden"><div className="p-4 border-b"><h3 className="font-bold">Prayer Requests</h3></div><table className="w-full text-sm">
+                    <thead className="bg-slate-100 uppercase"><tr><th className="p-4 text-left">Name</th><th className="p-4 text-left">Content</th><th className="p-4 text-left">Status</th><th className="p-4 text-left">Action</th></tr></thead>
+                    <tbody>{prayers.map((p: PrayerRequest) => <tr key={p.id} className="border-t"><td className="p-4">{p.name}</td><td className="p-4 max-w-xs truncate">{p.content}</td><td className="p-4"><span className={`px-2 py-1 rounded text-xs ${p.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{p.status}</span></td><td className="p-4 flex gap-2">{p.status === 'PENDING' && <button onClick={() => approvePrayer(p.id)}>Approve</button>}<button onClick={() => deletePrayer(p.id)}>Delete</button></td></tr>)}</tbody>
+                </table></div>}
 
-                 {activeTab === 'DN' && <div className="bg-white rounded-xl shadow overflow-hidden">
-                    <div className="p-4 border-b"><h3 className="font-bold">Donations</h3></div>
-                    <table className="w-full text-sm text-left"><thead className="bg-slate-50 uppercase"><tr><th className="p-4">Date</th><th className="p-4">Name</th><th className="p-4">Amount</th></tr></thead><tbody>{donations.map((d: Donation) => <tr key={d.id} className="border-t">
-                        <td className="p-4">{new Date(d.date).toLocaleDateString()}</td><td className="p-4">{d.name}</td><td className="p-4 font-bold">${d.amount}</td></tr>)}</tbody>
-                    </table>
-                 </div>}
+                 {activeTab === 'DN' && <div className="bg-white rounded-xl shadow overflow-hidden"><div className="p-4 border-b"><h3 className="font-bold">Donations</h3></div><table className="w-full text-sm">
+                    <thead className="bg-slate-50 uppercase"><tr><th className="p-4 text-left">Date</th><th className="p-4 text-left">Name</th><th className="p-4 text-left">Amount</th></tr></thead><tbody>{donations.map((d: Donation) => <tr key={d.id} className="border-t"><td className="p-4">{new Date(d.date).toLocaleDateString()}</td><td className="p-4">{d.name}</td><td className="p-4 font-bold">${d.amount}</td></tr>)}</tbody>
+                 </table></div>}
 
                 {activeTab === 'SET' && <div className="bg-white rounded-xl shadow p-6 space-y-6">
-                    <div>
-                        <h3 className="font-bold text-slate-800 mb-2">Verse of the Day</h3>
-                        <textarea className="w-full border rounded p-2 text-sm" rows={3} value={newVerse.text} onChange={(e) => setNewVerse({...newVerse, text: e.target.value})} />
-                        <input className="w-full border rounded p-2 text-sm mt-2" placeholder="Reference" value={newVerse.ref} onChange={(e) => setNewVerse({...newVerse, ref: e.target.value})} />
-                        <button onClick={updateVerse} className="mt-2 bg-primary-600 text-white px-4 py-2 rounded text-sm font-bold hover:bg-primary-700">Save Verse</button>
-                    </div>
-                    <div className="pt-6 border-t">
-                         <h4 className="font-bold text-slate-800 mb-2">Development Tools</h4>
-                         <p className="text-xs text-slate-500 mb-2">Generate mock data using AI if your lists are empty.</p>
-                         <div className="flex gap-2">
-                            <button onClick={async () => setSermons(await seedSermons())} className="bg-slate-200 px-3 py-1 rounded text-xs font-medium hover:bg-slate-300">Seed Sermons</button>
-                            <button onClick={async () => setEvents(await seedEvents())} className="bg-slate-200 px-3 py-1 rounded text-xs font-medium hover:bg-slate-300">Seed Events</button>
-                         </div>
-                    </div>
+                    <div><h3 className="font-bold mb-2">Verse of the Day</h3><textarea className="w-full border rounded p-2 text-sm" value={newVerse.text} onChange={(e) => setNewVerse({...newVerse, text: e.target.value})} /><input className="w-full border rounded p-2 text-sm mt-2" placeholder="Reference" value={newVerse.ref} onChange={(e) => setNewVerse({...newVerse, ref: e.target.value})} /><button onClick={updateVerse} className="mt-2 bg-primary-600 text-white px-4 py-2 rounded text-sm font-bold">Save Verse</button></div>
+                    <div className="pt-6 border-t"><h4 className="font-bold mb-2">Development Tools</h4><div className="flex gap-2">
+                        <button onClick={async () => setSermons(await seedSermons())} className="bg-slate-200 px-3 py-1 rounded text-xs">Seed Sermons</button>
+                        <button onClick={async () => setEvents(await seedEvents())} className="bg-slate-200 px-3 py-1 rounded text-xs">Seed Events</button>
+                    </div></div>
                 </div>}
                 </div>
             </div>
@@ -407,41 +386,28 @@ const AdminPage = (props: any) => {
 
 const SearchPage = ({ sermons, events, meetings, setPage }: { sermons: Sermon[], events: Event[], meetings: Meeting[], setPage: (page: Page) => void }) => {
     const [searchQuery, setSearchQuery] = useState('');
-    
-    const getSearchResults = () => {
-        if (!searchQuery) return [];
-        const q = searchQuery.toLowerCase();
-        const sResults = sermons.map(s => ({id: s.id, type: 'SERMON' as const, title: s.title, description: s.description, score: (s.title.toLowerCase().includes(q) ? 2:0) + (s.description.toLowerCase().includes(q) ? 1:0) }));
-        const eResults = events.map(e => ({id: e.id, type: 'EVENT' as const, title: e.title, description: e.description, score: (e.title.toLowerCase().includes(q) ? 2:0) + (e.description.toLowerCase().includes(q) ? 1:0) }));
-        const mResults = meetings.map(m => ({id: m.id, type: 'MEETING' as const, title: m.title, description: `Host: ${m.host}`, score: (m.title.toLowerCase().includes(q) ? 2:0) + (m.host.toLowerCase().includes(q) ? 1:0) }));
-        return [...sResults, ...eResults, ...mResults].filter(r => r.score > 0).sort((a, b) => b.score - a.score);
-    };
-    const results = getSearchResults();
+    const results = !searchQuery ? [] : [...sermons.map(s => ({...s, type: 'SERMON' as const})), ...events.map(e => ({...e, type: 'EVENT' as const})), ...meetings.map(m => ({...m, type: 'MEETING' as const, description: `Host: ${m.host}`}))]
+        .map(item => ({...item, score: (item.title.toLowerCase().includes(searchQuery.toLowerCase()) ? 2 : 0) + (item.description.toLowerCase().includes(searchQuery.toLowerCase()) ? 1 : 0)}))
+        .filter(item => item.score > 0).sort((a,b) => b.score - a.score);
 
     return (
         <div className="container mx-auto p-6 pb-20 max-w-3xl">
             <div className="relative mb-8">
                 <IconSearch className="absolute left-4 top-3.5 text-slate-400 w-5 h-5" />
-                <input autoFocus type="text" placeholder="Search..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-12 pr-4 py-3 text-lg border rounded-xl shadow-sm focus:ring-2 focus:ring-primary-500 outline-none" />
+                <input autoFocus type="text" placeholder="Search sermons, events, meetings..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-12 pr-4 py-3 text-lg border rounded-xl" />
             </div>
-            <div className="space-y-4">
-                {results.length === 0 && searchQuery && <p className="text-center text-slate-500">No results found for "{searchQuery}".</p>}
-                {results.map(r => (
-                    <div key={`${r.type}-${r.id}`} className="bg-white p-4 rounded-lg shadow-sm border hover:border-primary-300 transition cursor-pointer" onClick={() => {
-                        if (r.type === 'SERMON') setPage(Page.SERMONS); if (r.type === 'EVENT') setPage(Page.EVENTS); if (r.type === 'MEETING') setPage(Page.MEETINGS);
-                    }}>
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded mb-1 inline-block ${r.type === 'SERMON' ? 'bg-blue-100 text-blue-700' : r.type === 'EVENT' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{r.type}</span>
-                        <h3 className="font-bold text-lg text-slate-800">{r.title}</h3>
-                        <p className="text-slate-600 text-sm line-clamp-2">{r.description}</p>
-                    </div>
-                ))}
-            </div>
+            <div className="space-y-4">{results.map(r => (
+                <div key={`${r.type}-${r.id}`} className="bg-white p-4 rounded-lg shadow-sm" onClick={() => { if (r.type === 'SERMON') setPage(Page.SERMONS); if (r.type === 'EVENT') setPage(Page.EVENTS); if (r.type === 'MEETING') setPage(Page.MEETINGS);}}>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded mb-1 inline-block ${r.type === 'SERMON' ? 'bg-blue-100 text-blue-700' : r.type === 'EVENT' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'}`}>{r.type}</span>
+                    <h3 className="font-bold text-lg">{r.title}</h3>
+                    <p className="text-slate-600 text-sm">{r.description}</p>
+                </div>
+            ))}</div>
         </div>
     );
 };
 
 // --- MAIN APP COMPONENT ---
-
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>(Page.HOME);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
@@ -452,16 +418,11 @@ const App: React.FC = () => {
   const [meetings, setMeetings] = useStickyState<Meeting[]>('meetings', []);
   const [prayers, setPrayers] = useStickyState<PrayerRequest[]>('prayers', []);
   const [donations, setDonations] = useStickyState<Donation[]>('donations', []);
+  const [videoModal, setVideoModal] = useState<{open: boolean, url: string | null}>({open: false, url: null});
 
   useEffect(() => {
-    const initData = async () => {
-      if (!verse) {
-          const v = await getVerseOfDay();
-          setVerse({ text: v.verse, ref: v.reference });
-      }
-    };
-    initData();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!verse) getVerseOfDay().then(v => setVerse({ text: v.verse, ref: v.reference }));
+  }, []); // eslint-disable-line
 
   const handlePrayerSubmit = async (name: string, content: string) => {
     const newPrayer: PrayerRequest = { id: Date.now().toString(), name, content, status: 'PENDING', date: new Date().toISOString() };
@@ -472,12 +433,17 @@ const App: React.FC = () => {
 
   const handleDonation = (d: Donation) => setDonations(prev => [...prev, d]);
   const handleLogin = (role: UserRole) => { setUserRole(role); setCurrentPage(Page.ADMIN); };
+  const openVideoModal = (url: string) => {
+      // Basic URL transformation for YouTube embeds
+      const videoId = url.includes('youtu.be') ? url.split('/').pop() : new URL(url).searchParams.get('v');
+      setVideoModal({ open: true, url: `https://www.youtube.com/embed/${videoId}` });
+  }
 
   const pageProps = {
     [Page.HOME]: { verse, setPage: setCurrentPage },
-    [Page.SERMONS]: { sermons },
+    [Page.SERMONS]: { sermons, openVideoModal },
     [Page.EVENTS]: { events },
-    [Page.MEETINGS]: { userName: userRole ? 'Admin Host' : 'Guest User', meetings },
+    [Page.MEETINGS]: { meetings },
     [Page.PRAYER]: { prayers, handlePrayerSubmit },
     [Page.GIVING]: { handleDonation },
     [Page.ADMIN]: { userRole, handleLogin, prayers, setPrayers, sermons, setSermons, events, setEvents, meetings, setMeetings, donations, verse, setVerse },
@@ -500,6 +466,19 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
       <Navigation activePage={currentPage} setPage={setCurrentPage} role={userRole} onLogout={() => setUserRole(null)} />
       <main className="pb-20 md:pb-0">{renderPage()}</main>
+
+      {videoModal.open && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center animate-fade-in" onClick={() => setVideoModal({open: false, url: null})}>
+            <div className="bg-slate-900 p-4 rounded-xl shadow-2xl w-full max-w-4xl" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-end mb-2">
+                    <button onClick={() => setVideoModal({open: false, url: null})} className="text-slate-400 hover:text-white"><IconX/></button>
+                </div>
+                <div className="aspect-video">
+                    <iframe className="w-full h-full rounded-lg" src={videoModal.url || ''} title="Sermon Video" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+                </div>
+            </div>
+        </div>
+      )}
     </div>
   );
 };
