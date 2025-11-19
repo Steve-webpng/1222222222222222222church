@@ -203,14 +203,14 @@ const Meetings: React.FC<MeetingsPageProps> = ({ userName }) => {
                      <div className="relative w-full h-full group flex items-center justify-center bg-neutral-900">
                         <video ref={screenShareRef} autoPlay playsInline className="w-full h-full object-contain" />
                         
-                        {/* Screen Share Overlay */}
-                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 backdrop-blur-sm">
-                            <p className="text-white text-xl font-bold mb-6 drop-shadow-lg tracking-wide select-none">You are currently screen sharing</p>
+                        {/* Screen Share Overlay - Appears on hover */}
+                        <div className="absolute inset-0 bg-slate-900/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 backdrop-blur-sm cursor-default">
+                            <p className="text-white text-2xl font-bold mb-8 drop-shadow-xl tracking-wide select-none">You are currently screen sharing</p>
                             <button 
                                 onClick={toggleScreenShare}
-                                className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-bold shadow-lg transform hover:scale-105 transition-all flex items-center gap-2 cursor-pointer"
+                                className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-2xl transform hover:scale-105 transition-all flex items-center gap-3 cursor-pointer ring-4 ring-red-600/30"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>
                                 Stop Sharing
                             </button>
                         </div>

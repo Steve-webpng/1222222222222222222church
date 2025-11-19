@@ -5,11 +5,16 @@ import { getVerseOfDay, seedSermons, seedEvents, generatePrayerResponse } from '
 import Meetings from './pages/Meetings';
 import { IconSearch } from './components/Icons';
 
-// Simple localStorage wrapper
+// Simple localStorage wrapper with error handling
 const useStickyState = <T,>(key: string, defaultValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
   const [state, setState] = useState<T>(() => {
-    const stickyValue = window.localStorage.getItem(key);
-    return stickyValue !== null ? JSON.parse(stickyValue) : defaultValue;
+    try {
+      const stickyValue = window.localStorage.getItem(key);
+      return stickyValue !== null ? JSON.parse(stickyValue) : defaultValue;
+    } catch (error) {
+      console.warn(`Error parsing localStorage key "${key}":`, error);
+      return defaultValue;
+    }
   });
   useEffect(() => {
     window.localStorage.setItem(key, JSON.stringify(state));
