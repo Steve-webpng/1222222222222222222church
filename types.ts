@@ -19,6 +19,7 @@ export interface Sermon {
   id: string;
   title: string;
   speaker: string;
+  series?: string; // New: Group sermons by series
   date: string;
   description: string;
   imageUrl: string;
@@ -28,7 +29,7 @@ export interface Sermon {
 export interface Event {
   id: string;
   title: string;
-  date: string;
+  date: string; // Should be in a format parseable by new Date() e.g., "YYYY-MM-DDTHH:mm"
   location: string;
   description: string;
 }
@@ -56,6 +57,7 @@ export interface PrayerRequest {
   status: 'PENDING' | 'APPROVED';
   aiResponse?: string;
   date: string;
+  prayerCount: number; // New: To count prayers
 }
 
 export interface SearchResult {

@@ -4,9 +4,10 @@ import { IconVideo, IconVideoOff, IconMic, IconMicOff, IconScreenShare, IconStop
 
 interface MeetingsPageProps {
   meetings: Meeting[];
+  handleShare: (title: string, text: string, url: string) => void;
 }
 
-const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
+const Meetings: React.FC<MeetingsPageProps> = ({ meetings, handleShare }) => {
   const [activeMeeting, setActiveMeeting] = useState<Meeting | null>(null);
   const [joiningMeeting, setJoiningMeeting] = useState<Meeting | null>(null);
   const [userName, setUserName] = useState('');
@@ -192,12 +193,12 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
   if (joiningMeeting) {
       return (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 animate-fade-in">
-              <form onSubmit={finalizeJoin} className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-sm">
-                  <h2 className="text-2xl font-bold text-slate-800 mb-2">Join Meeting</h2>
-                  <p className="text-slate-500 mb-6">Enter your name to join "{joiningMeeting.title}".</p>
-                  <input autoFocus required value={userName} onChange={e => setUserName(e.target.value)} placeholder="Your Name" className="w-full border border-slate-300 rounded-lg p-3 mb-4 focus:ring-2 focus:ring-primary-500 outline-none" />
+              <form onSubmit={finalizeJoin} className="bg-white dark:bg-slate-800 p-8 rounded-xl shadow-2xl w-full max-w-sm">
+                  <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">Join Meeting</h2>
+                  <p className="text-slate-500 dark:text-slate-400 mb-6">Enter your name to join "{joiningMeeting.title}".</p>
+                  <input autoFocus required value={userName} onChange={e => setUserName(e.target.value)} placeholder="Your Name" className="w-full border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-lg p-3 mb-4 focus:ring-2 focus:ring-primary-500 outline-none" />
                   <div className="flex gap-2">
-                     <button type="button" onClick={() => setJoiningMeeting(null)} className="w-full bg-slate-100 text-slate-700 py-3 rounded-lg font-bold hover:bg-slate-200">Cancel</button>
+                     <button type="button" onClick={() => setJoiningMeeting(null)} className="w-full bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 py-3 rounded-lg font-bold hover:bg-slate-200 dark:hover:bg-slate-600">Cancel</button>
                      <button type="submit" className="w-full bg-primary-600 text-white py-3 rounded-lg font-bold hover:bg-primary-700">Join</button>
                   </div>
               </form>
@@ -231,7 +232,7 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
         <div className="h-14 border-b border-slate-700 flex items-center justify-between px-4 bg-slate-800 shrink-0">
             <div className="font-semibold truncate pr-2 flex items-center">
                 {activeMeeting.title} 
-                <span className="text-xs font-normal text-slate-400 px-2 py-0.5 bg-slate-700 rounded ml-2 whitespace-nowrap hidden sm:inline-block">{participants.length} active</span>
+                <span className="text-xs font-normal text-slate-400 px-2 py-0.5 bg-slate-700 rounded ml-2 whitespace-nowrap">{participants.length} active</span>
             </div>
             <button className="md:hidden text-sm px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded transition" onClick={() => setChatOpen(!chatOpen)}>Chat</button>
         </div>
@@ -242,7 +243,8 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
                 {screenStream ? (
                      <div className="relative w-full h-full group flex items-center justify-center bg-neutral-900 overflow-hidden rounded-lg">
                         <video ref={screenShareRef} autoPlay playsInline className="w-full h-full object-contain" />
-                        <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                        <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                           <p className="text-lg font-medium mb-4">You are sharing your screen</p>
                            <button onClick={toggleScreenShare} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold shadow-lg flex items-center gap-3">
                                 <IconStopScreenShare className="w-5 h-5" /> Stop Sharing
                            </button>
@@ -313,7 +315,6 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
                             {Object.keys(m.reactions).length > 0 && (
                                 <div className={`flex gap-1 mt-1 ${m.user === localUser.name ? 'pr-2' : 'pl-2'}`}>
                                     {Object.entries(m.reactions).map(([emoji, usersValue]) => {
-                                      // FIX: Cast `usersValue` to `string[]` to fix type error where `users` was inferred as `unknown`.
                                       const users = usersValue as string[];
                                       return (
                                         <button key={emoji} onClick={() => handleReaction(m.id, emoji)}
@@ -334,16 +335,16 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
             )}
         </div>
         <div className="h-20 bg-slate-800 border-t border-slate-700 flex items-center justify-center gap-4 px-6 shrink-0">
-            <button onClick={() => setMicOn(!micOn)} className={`p-4 rounded-full ${micOn ? 'bg-slate-700' : 'bg-red-500'}`}><IconMic className={`w-5 h-5 ${!micOn && 'hidden'}`} /><IconMicOff className={`w-5 h-5 ${micOn && 'hidden'}`} /></button>
-            <button onClick={() => setCameraOn(!cameraOn)} className={`p-4 rounded-full ${cameraOn ? 'bg-slate-700' : 'bg-red-500'}`}><IconVideo className={`w-5 h-5 ${!cameraOn && 'hidden'}`} /><IconVideoOff className={`w-5 h-5 ${cameraOn && 'hidden'}`} /></button>
+            <button onClick={() => setMicOn(!micOn)} className={`p-4 rounded-full ${micOn ? 'bg-slate-700' : 'bg-red-500 text-white'}`}><IconMic className={`w-5 h-5 ${!micOn && 'hidden'}`} /><IconMicOff className={`w-5 h-5 ${micOn && 'hidden'}`} /></button>
+            <button onClick={() => setCameraOn(!cameraOn)} className={`p-4 rounded-full ${cameraOn ? 'bg-slate-700' : 'bg-red-500 text-white'}`}><IconVideo className={`w-5 h-5 ${!cameraOn && 'hidden'}`} /><IconVideoOff className={`w-5 h-5 ${cameraOn && 'hidden'}`} /></button>
             <button 
                 onClick={toggleScreenShare} 
-                className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-colors ${screenStream ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
+                className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-colors ${screenStream ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
             >
                 {screenStream ? <IconStopScreenShare className="w-5 h-5" /> : <IconScreenShare className="w-5 h-5" />}
                 <span>{screenStream ? 'Stop Sharing' : 'Share Screen'}</span>
             </button>
-            <button onClick={() => setChatOpen(!chatOpen)} className={`p-4 rounded-full hidden md:block ${chatOpen ? 'bg-primary-600' : 'bg-slate-700'}`}>Chat</button>
+            <button onClick={() => setChatOpen(!chatOpen)} className={`p-4 rounded-full hidden md:block ${chatOpen ? 'bg-primary-600 text-white' : 'bg-slate-700'}`}>Chat</button>
             <div className="w-px h-10 bg-slate-700 mx-2"></div>
             <button onClick={handleLeave} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold">End Call</button>
         </div>
@@ -355,32 +356,32 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
   return (
     <div className="container mx-auto p-6 max-w-4xl animate-fade-in">
       <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-slate-800">Micro Gatherings</h2>
+          <h2 className="text-3xl font-bold text-slate-800 dark:text-slate-100">Micro Gatherings</h2>
       </div>
       {meetings.length === 0 ? (
-         <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-dashed border-slate-300">
-            <IconVideo className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-700">No Scheduled Meetings</h3>
-            <p className="text-slate-500 mt-1">Ask an admin to schedule a new meeting.</p>
+         <div className="text-center py-20 bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-dashed border-slate-300 dark:border-slate-700">
+            <IconVideo className="w-12 h-12 text-slate-300 dark:text-slate-500 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-200">No Scheduled Meetings</h3>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">Ask an admin to schedule a new meeting.</p>
          </div>
       ) : (
         <div className="space-y-4">
             {meetings.map(meeting => (
-                <div key={meeting.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-start gap-4 hover:shadow-md transition group">
+                <div key={meeting.id} className="bg-white dark:bg-slate-800 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start gap-4 hover:shadow-md transition group">
                     <div className="flex-1">
-                        <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary-600 transition-colors">{meeting.title}</h3>
-                        <div className="flex flex-wrap items-center text-slate-500 text-sm mt-1 gap-x-4 gap-y-1">
+                        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 group-hover:text-primary-600 dark:group-hover:text-primary-500 transition-colors">{meeting.title}</h3>
+                        <div className="flex flex-wrap items-center text-slate-500 dark:text-slate-400 text-sm mt-1 gap-x-4 gap-y-1">
                             <span>📅 {meeting.startTime}</span>
                             <span>Host: {meeting.host}</span>
                         </div>
-                        <p className="text-slate-600 text-sm mt-3 line-clamp-2">{meeting.description}</p>
+                        <p className="text-slate-600 dark:text-slate-300 text-sm mt-3 line-clamp-2">{meeting.description}</p>
                     </div>
                     <div className="flex gap-2 w-full md:w-auto self-center pt-4 md:pt-0">
                         <button 
-                        onClick={() => alert(`Link copied: https://1000micro.church/meet/${meeting.id}`)}
-                        className="flex-1 md:flex-none border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50"
+                        onClick={() => handleShare('Join our meeting!', meeting.title, `https://1000micro.church/meet/${meeting.id}`)}
+                        className="flex-1 md:flex-none border border-slate-200 dark:border-slate-600 text-slate-600 dark:text-slate-300 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700"
                         >
-                            Copy Link
+                            Share
                         </button>
                         <button 
                         onClick={() => handleJoinClick(meeting)}

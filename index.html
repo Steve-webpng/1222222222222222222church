@@ -7,15 +7,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
+        darkMode: 'class', // Enable dark mode
         theme: {
           extend: {
             colors: {
               primary: {
-                50: '#ecfdf5', // Emerald 50
-                100: '#d1fae5',
-                500: '#10b981', // Emerald 500
-                600: '#059669', // Emerald 600
-                700: '#047857', // Emerald 700
+                50: '#f0fdf4', // Green 50
+                100: '#dcfce7',
+                500: '#22c55e', // Green 500
+                600: '#16a34a', // Green 600
+                700: '#15803d', // Green 700
               },
               slate: {
                 50: '#f8fafc',
@@ -28,9 +29,14 @@
       }
     </script>
     <style>
+      /* Light Mode Defaults */
       body {
         background-color: #f8fafc; /* Slate 50 */
         color: #1e293b; /* Slate 800 */
+      }
+      .dark body {
+        background-color: #0f172a; /* Slate 900 */
+        color: #f8fafc; /* Slate 50 */
       }
       /* Custom Scrollbar */
       ::-webkit-scrollbar {
@@ -39,12 +45,21 @@
       ::-webkit-scrollbar-track {
         background: #f1f1f1;
       }
+      .dark ::-webkit-scrollbar-track {
+        background: #1e293b;
+      }
       ::-webkit-scrollbar-thumb {
         background: #cbd5e1;
         border-radius: 4px;
       }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #475569;
+      }
       ::-webkit-scrollbar-thumb:hover {
         background: #94a3b8;
+      }
+       .dark ::-webkit-scrollbar-thumb:hover {
+        background: #64748b;
       }
     </style>
   <script type="importmap">
