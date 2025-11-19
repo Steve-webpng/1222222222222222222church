@@ -3,6 +3,7 @@
   "description": "A comprehensive platform for micro churches featuring sermons, events, video conferencing, and AI-powered prayer support.",
   "requestFramePermissions": [
     "camera",
-    "microphone"
+    "microphone",
+    "display-capture"
   ]
 }
