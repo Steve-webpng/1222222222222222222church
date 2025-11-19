@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Meeting, LiveParticipant } from '../types';
-import { IconVideo, IconVideoOff, IconMic, IconMicOff, IconScreenShare, IconStopScreenShare, IconMoreVertical, IconUserX } from '../components/Icons';
+import { Meeting, LiveParticipant, ChatMessage } from '../types';
+import { IconVideo, IconVideoOff, IconMic, IconMicOff, IconScreenShare, IconStopScreenShare, IconMoreVertical, IconUserX, IconSmile } from '../components/Icons';
 
 interface MeetingsPageProps {
   meetings: Meeting[];
@@ -21,8 +21,9 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
   const [cameraOn, setCameraOn] = useState(true);
   const [micOn, setMicOn] = useState(true);
   const [chatOpen, setChatOpen] = useState(false);
-  const [messages, setMessages] = useState<{user: string, text: string}[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMsg, setInputMsg] = useState('');
+  const [activeReactionPicker, setActiveReactionPicker] = useState<string | null>(null);
   
   const [localUser, setLocalUser] = useState<LiveParticipant | null>(null);
   const [participants, setParticipants] = useState<LiveParticipant[]>([]);
@@ -33,6 +34,8 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
   const [pipDimensions, setPipDimensions] = useState({ width: 280, height: 158 });
   const [isResizing, setIsResizing] = useState(false);
   const resizeRef = useRef<{ startX: number, startY: number, startWidth: number, startHeight: number } | null>(null);
+
+  const EMOJI_REACTIONS = ['👍', '❤️', '😂', '🙏', '🎉'];
 
   // Join Logic
   const handleJoinClick = (meeting: Meeting) => {
@@ -104,8 +107,42 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMsg.trim() || !localUser) return;
-    setMessages([...messages, { user: localUser.name, text: inputMsg }]);
+    const newMessage: ChatMessage = {
+        id: `msg-${Date.now()}`,
+        user: localUser.name,
+        text: inputMsg,
+        reactions: {},
+    };
+    setMessages([...messages, newMessage]);
     setInputMsg('');
+  };
+
+  const handleReaction = (messageId: string, emoji: string) => {
+    if (!localUser) return;
+    const userName = localUser.name;
+
+    setMessages(prevMessages => 
+        prevMessages.map(msg => {
+            if (msg.id === messageId) {
+                const newReactions = { ...msg.reactions };
+                const reactedUsers = newReactions[emoji] || [];
+
+                if (reactedUsers.includes(userName)) {
+                    // User is removing their reaction
+                    newReactions[emoji] = reactedUsers.filter(u => u !== userName);
+                    if (newReactions[emoji].length === 0) {
+                        delete newReactions[emoji];
+                    }
+                } else {
+                    // User is adding a reaction
+                    newReactions[emoji] = [...reactedUsers, userName];
+                }
+                return { ...msg, reactions: newReactions };
+            }
+            return msg;
+        })
+    );
+    setActiveReactionPicker(null);
   };
   
   useEffect(() => {
@@ -255,8 +292,41 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
             {chatOpen && (
                 <div className="w-full md:w-80 bg-slate-800 border-l border-slate-700 flex flex-col absolute inset-0 md:static z-40 shadow-xl">
                     <div className="p-4 border-b border-slate-700 flex justify-between items-center"><span className="font-bold text-sm uppercase">Chat</span><button onClick={() => setChatOpen(false)} className="md:hidden">X</button></div>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                        {messages.map((m, i) => (<div key={i} className={`flex flex-col ${m.user === localUser.name ? 'items-end' : 'items-start'}`}><span className="text-xs text-slate-400 mb-1">{m.user}</span><div className={`p-2.5 rounded-lg text-sm ${m.user === localUser.name ? 'bg-primary-600' : 'bg-slate-700'}`}>{m.text}</div></div>))}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                        {messages.map((m) => (
+                          <div key={m.id} className={`flex flex-col group ${m.user === localUser.name ? 'items-end' : 'items-start'}`}>
+                            <span className="text-xs text-slate-400 mb-1 px-2">{m.user}</span>
+                            <div className="flex items-center gap-2">
+                                {m.user === localUser.name && <button onClick={() => setActiveReactionPicker(activeReactionPicker === m.id ? null : m.id)} className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white"><IconSmile className="w-4 h-4"/></button>}
+                                <div className={`p-2.5 rounded-lg text-sm relative ${m.user === localUser.name ? 'bg-primary-600' : 'bg-slate-700'}`}>
+                                    {m.text}
+                                    {activeReactionPicker === m.id && (
+                                        <div className="absolute bottom-full mb-2 bg-slate-600 p-1 rounded-full flex gap-1 shadow-lg">
+                                            {EMOJI_REACTIONS.map(emoji => (
+                                                <button key={emoji} onClick={() => handleReaction(m.id, emoji)} className="p-1.5 rounded-full hover:bg-slate-500/50 text-xl">{emoji}</button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                {m.user !== localUser.name && <button onClick={() => setActiveReactionPicker(activeReactionPicker === m.id ? null : m.id)} className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-white"><IconSmile className="w-4 h-4"/></button>}
+                            </div>
+                            {Object.keys(m.reactions).length > 0 && (
+                                <div className={`flex gap-1 mt-1 ${m.user === localUser.name ? 'pr-2' : 'pl-2'}`}>
+                                    {Object.entries(m.reactions).map(([emoji, usersValue]) => {
+                                      // FIX: Cast `usersValue` to `string[]` to fix type error where `users` was inferred as `unknown`.
+                                      const users = usersValue as string[];
+                                      return (
+                                        <button key={emoji} onClick={() => handleReaction(m.id, emoji)}
+                                          className={`px-1.5 py-0.5 text-xs rounded-full flex items-center gap-1 transition-colors ${users.includes(localUser.name) ? 'bg-primary-500/50 border border-primary-400 text-white' : 'bg-slate-600/70 border border-transparent hover:bg-slate-600'}`}>
+                                          <span>{emoji}</span>
+                                          <span>{users.length}</span>
+                                        </button>
+                                      );
+                                    })}
+                                </div>
+                            )}
+                          </div>
+                        ))}
                         <div ref={chatEndRef} />
                     </div>
                     <form onSubmit={sendMessage} className="p-4 border-t border-slate-700"><input value={inputMsg} onChange={e => setInputMsg(e.target.value)} className="w-full bg-slate-900 border-slate-600 rounded-full pl-4 pr-10 py-2.5 text-sm" placeholder="Type..."/></form>

@@ -75,3 +75,10 @@ export interface SearchResult {
   description: string;
   score: number; // For ranking
 }
+
+export interface ChatMessage {
+  id: string;
+  user: string;
+  text: string;
+  reactions: Record<string, string[]>; // emoji -> [userName, userName, ...]
+}
