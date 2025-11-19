@@ -4,7 +4,6 @@ export enum Page {
   EVENTS = 'EVENTS',
   MEETINGS = 'MEETINGS',
   PRAYER = 'PRAYER',
-  GIVING = 'GIVING',
   ADMIN = 'ADMIN',
   SEARCH = 'SEARCH'
 }
@@ -13,7 +12,6 @@ export enum UserRole {
   ADMIN = 'ADMIN',
   CONTENT_MANAGER = 'CONTENT_MANAGER',
   MODERATOR = 'MODERATOR',
-  FINANCE = 'FINANCE',
   GUEST = 'GUEST'
 }
 
@@ -60,14 +58,6 @@ export interface PrayerRequest {
   date: string;
 }
 
-export interface Donation {
-  id: string;
-  name: string;
-  email: string;
-  amount: number;
-  date: string;
-}
-
 export interface SearchResult {
   id: string;
   type: 'SERMON' | 'EVENT' | 'MEETING';
@@ -81,4 +71,10 @@ export interface ChatMessage {
   user: string;
   text: string;
   reactions: Record<string, string[]>; // emoji -> [userName, userName, ...]
+}
+
+export interface SlideshowImage {
+  id: string;
+  url: string;
+  caption?: string;
 }

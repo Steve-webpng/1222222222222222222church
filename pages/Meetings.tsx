@@ -336,7 +336,13 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
         <div className="h-20 bg-slate-800 border-t border-slate-700 flex items-center justify-center gap-4 px-6 shrink-0">
             <button onClick={() => setMicOn(!micOn)} className={`p-4 rounded-full ${micOn ? 'bg-slate-700' : 'bg-red-500'}`}><IconMic className={`w-5 h-5 ${!micOn && 'hidden'}`} /><IconMicOff className={`w-5 h-5 ${micOn && 'hidden'}`} /></button>
             <button onClick={() => setCameraOn(!cameraOn)} className={`p-4 rounded-full ${cameraOn ? 'bg-slate-700' : 'bg-red-500'}`}><IconVideo className={`w-5 h-5 ${!cameraOn && 'hidden'}`} /><IconVideoOff className={`w-5 h-5 ${cameraOn && 'hidden'}`} /></button>
-            <button onClick={toggleScreenShare} className={`p-4 rounded-full ${screenStream ? 'bg-green-600' : 'bg-slate-700'}`}><IconScreenShare className="w-5 h-5" /></button>
+            <button 
+                onClick={toggleScreenShare} 
+                className={`flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold transition-colors ${screenStream ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
+            >
+                {screenStream ? <IconStopScreenShare className="w-5 h-5" /> : <IconScreenShare className="w-5 h-5" />}
+                <span>{screenStream ? 'Stop Sharing' : 'Share Screen'}</span>
+            </button>
             <button onClick={() => setChatOpen(!chatOpen)} className={`p-4 rounded-full hidden md:block ${chatOpen ? 'bg-primary-600' : 'bg-slate-700'}`}>Chat</button>
             <div className="w-px h-10 bg-slate-700 mx-2"></div>
             <button onClick={handleLeave} className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold">End Call</button>

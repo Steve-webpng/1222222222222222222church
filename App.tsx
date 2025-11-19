@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import Navigation from './components/Navigation';
-import { Page, UserRole, Sermon, Event, PrayerRequest, Donation, Meeting } from './types';
+import { Page, UserRole, Sermon, Event, PrayerRequest, Meeting, SlideshowImage } from './types';
 import { getVerseOfDay, seedSermons, seedEvents, generatePrayerResponse } from './services/geminiService';
 import Meetings from './pages/Meetings';
-import { IconSearch, IconTrash, IconPlus, IconX, IconMapPin } from './components/Icons';
+import { IconSearch, IconTrash, IconPlus, IconX, IconMapPin, IconChevronLeft, IconChevronRight } from './components/Icons';
 
 // Simple localStorage wrapper with error handling
 const useStickyState = <T,>(key: string, defaultValue: T): [T, React.Dispatch<React.SetStateAction<T>>] => {
@@ -24,39 +24,83 @@ const useStickyState = <T,>(key: string, defaultValue: T): [T, React.Dispatch<Re
 
 // --- PAGE COMPONENTS ---
 
-const HomePage = ({ verse, setPage }: { verse: { text: string; ref: string } | null, setPage: (page: Page) => void }) => (
-    <div className="animate-fade-in">
-      <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-20 px-6 text-center rounded-b-3xl shadow-lg">
-        <h1 className="text-4xl md:text-6xl font-bold mb-4">Welcome Home</h1>
-        <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">Connecting 1000 micro churches across the globe in one unified digital spirit.</p>
-      </div>
-      <div className="container mx-auto px-6 -mt-10">
-        <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-3xl mx-auto">
-          <h2 className="text-primary-600 font-bold tracking-wider uppercase text-xs mb-2">Verse of the Day</h2>
-          {verse ? (
-             <>
-                <blockquote className="text-xl md:text-2xl font-serif text-slate-700 italic mb-4">"{verse.text}"</blockquote>
-                <cite className="text-slate-500 font-semibold not-italic">— {verse.ref}</cite>
-             </>
-          ) : <div className="animate-pulse h-10 bg-slate-100 rounded"></div>}
+const HomePage = ({ verse, setPage, slideshowImages }: { verse: { text: string; ref: string } | null, setPage: (page: Page) => void, slideshowImages: SlideshowImage[] }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    const prevSlide = () => setCurrentIndex(i => (i === 0 ? slideshowImages.length - 1 : i - 1));
+    const nextSlide = () => {
+        if (slideshowImages.length > 0) {
+            setCurrentIndex(i => (i === slideshowImages.length - 1 ? 0 : i + 1));
+        }
+    };
+    
+    useEffect(() => {
+        if (slideshowImages.length > 1) {
+            const timer = setTimeout(nextSlide, 5000);
+            return () => clearTimeout(timer);
+        }
+    }, [currentIndex, slideshowImages.length]);
+
+    return (
+        <div className="animate-fade-in">
+          {slideshowImages.length > 0 ? (
+            <div className="relative w-full h-[60vh] overflow-hidden bg-slate-900 shadow-lg rounded-b-3xl">
+                {slideshowImages.map((slide, slideIndex) => (
+                    <div key={slide.id} className={`absolute top-0 left-0 w-full h-full transition-opacity duration-1000 ${slideIndex === currentIndex ? 'opacity-100' : 'opacity-0'}`}>
+                        <img src={slide.url} alt={slide.caption || 'Slideshow image'} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                        <div className="absolute bottom-0 left-0 p-8 md:p-12 text-white">
+                            <h1 className="text-4xl md:text-6xl font-bold mb-4 drop-shadow-lg">{slide.caption || 'Welcome Home'}</h1>
+                            <p className="text-lg md:text-xl opacity-90 max-w-2xl drop-shadow-md">Connecting 1000 micro churches across the globe.</p>
+                        </div>
+                    </div>
+                ))}
+                {slideshowImages.length > 1 && (
+                    <>
+                        <button onClick={prevSlide} className="absolute top-1/2 left-4 -translate-y-1/2 bg-black/40 p-2 rounded-full text-white hover:bg-black/60 transition z-10"><IconChevronLeft className="w-6 h-6" /></button>
+                        <button onClick={nextSlide} className="absolute top-1/2 right-4 -translate-y-1/2 bg-black/40 p-2 rounded-full text-white hover:bg-black/60 transition z-10"><IconChevronRight className="w-6 h-6" /></button>
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                            {slideshowImages.map((_, i) => <div key={i} onClick={() => setCurrentIndex(i)} className={`w-2 h-2 rounded-full cursor-pointer transition ${i === currentIndex ? 'bg-white' : 'bg-white/50'}`}></div>)}
+                        </div>
+                    </>
+                )}
+            </div>
+          ) : (
+            <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white py-20 px-6 text-center rounded-b-3xl shadow-lg">
+                <h1 className="text-4xl md:text-6xl font-bold mb-4">Welcome Home</h1>
+                <p className="text-lg md:text-xl opacity-90 max-w-2xl mx-auto">Connecting 1000 micro churches across the globe in one unified digital spirit.</p>
+            </div>
+          )}
+
+          <div className="container mx-auto px-6 -mt-10">
+            <div className="bg-white p-8 rounded-xl shadow-md text-center max-w-3xl mx-auto relative z-10">
+              <h2 className="text-primary-600 font-bold tracking-wider uppercase text-xs mb-2">Verse of the Day</h2>
+              {verse ? (
+                 <>
+                    <blockquote className="text-xl md:text-2xl font-serif text-slate-700 italic mb-4">"{verse.text}"</blockquote>
+                    <cite className="text-slate-500 font-semibold not-italic">— {verse.ref}</cite>
+                 </>
+              ) : <div className="animate-pulse h-10 bg-slate-100 rounded"></div>}
+            </div>
+          </div>
+          <div className="container mx-auto px-6 py-12 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+             <div onClick={() => setPage(Page.SERMONS)} className="cursor-pointer bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-t-4 border-primary-500">
+                <h3 className="text-xl font-bold mb-2">Latest Sermons</h3>
+                <p className="text-slate-600">Catch up on the latest teachings from our network pastors.</p>
+             </div>
+             <div onClick={() => setPage(Page.EVENTS)} className="cursor-pointer bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-t-4 border-primary-500">
+                <h3 className="text-xl font-bold mb-2">Upcoming Events</h3>
+                <p className="text-slate-600">Join us for fellowship, worship nights, and community outreach.</p>
+             </div>
+             <div onClick={() => setPage(Page.PRAYER)} className="cursor-pointer bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-t-4 border-primary-500">
+                <h3 className="text-xl font-bold mb-2">Prayer Wall</h3>
+                <p className="text-slate-600">Share your burdens and let the community pray for you.</p>
+             </div>
+          </div>
         </div>
-      </div>
-      <div className="container mx-auto px-6 py-12 grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-         <div onClick={() => setPage(Page.SERMONS)} className="cursor-pointer bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-t-4 border-blue-500">
-            <h3 className="text-xl font-bold mb-2">Latest Sermons</h3>
-            <p className="text-slate-600">Catch up on the latest teachings from our network pastors.</p>
-         </div>
-         <div onClick={() => setPage(Page.EVENTS)} className="cursor-pointer bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-t-4 border-green-500">
-            <h3 className="text-xl font-bold mb-2">Upcoming Events</h3>
-            <p className="text-slate-600">Join us for fellowship, worship nights, and community outreach.</p>
-         </div>
-         <div onClick={() => setPage(Page.PRAYER)} className="cursor-pointer bg-white p-6 rounded-xl shadow hover:shadow-lg transition border-t-4 border-purple-500">
-            <h3 className="text-xl font-bold mb-2">Prayer Wall</h3>
-            <p className="text-slate-600">Share your burdens and let the community pray for you.</p>
-         </div>
-      </div>
-    </div>
-);
+    );
+};
+
 
 const SermonsPage = ({ sermons, openVideoModal }: { sermons: Sermon[], openVideoModal: (url: string) => void }) => (
     <div className="container mx-auto p-6 animate-fade-in pb-20">
@@ -203,69 +247,17 @@ const PrayerPage = ({ prayers, handlePrayerSubmit }: { prayers: PrayerRequest[],
     );
 };
 
-const GivingPage = ({ handleDonation }: { handleDonation: (d: Donation) => void }) => {
-    const [amount, setAmount] = useState('50');
-    const [donorName, setDonorName] = useState('');
-    const [email, setEmail] = useState('');
-    const [success, setSuccess] = useState(false);
-
-    const submitDonation = (e: React.FormEvent) => {
-        e.preventDefault();
-        handleDonation({ id: Date.now().toString(), name: donorName || 'Anonymous', email, amount: parseFloat(amount), date: new Date().toISOString() });
-        setSuccess(true);
-        setAmount(''); setDonorName(''); setEmail('');
-        setTimeout(() => setSuccess(false), 5000);
-    }
-
-    return (
-        <div className="container mx-auto p-6 animate-fade-in flex items-center justify-center min-h-[60vh]">
-           <div className="bg-white w-full max-w-lg p-8 rounded-2xl shadow-xl">
-                <h2 className="text-3xl font-bold text-center text-slate-800 mb-2">Give Generously</h2>
-                <p className="text-center text-slate-500 mb-8">Support the 1000 Micro Church Network.</p>
-                {success ? (
-                    <div className="bg-green-50 border border-green-200 text-green-800 p-6 rounded-xl text-center">
-                        <h3 className="text-xl font-bold mb-2">Thank You!</h3>
-                        <p>Your donation has been recorded.</p>
-                    </div>
-                ) : (
-                    <form onSubmit={submitDonation} className="space-y-6">
-                        <div className="grid grid-cols-3 gap-4">
-                            {['25', '50', '100'].map(val => (
-                                <button type="button" key={val} onClick={() => setAmount(val)} className={`py-3 rounded-lg border font-bold ${amount === val ? 'bg-primary-600 text-white border-primary-600' : 'border-slate-200 text-slate-600 hover:border-primary-500'}`}>
-                                    ${val}
-                                </button>
-                            ))}
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Custom Amount</label>
-                            <div className="relative"><span className="absolute left-3 top-2 text-slate-500">$</span><input type="number" value={amount} onChange={e=>setAmount(e.target.value)} className="pl-8 w-full border border-slate-300 rounded p-2" /></div>
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Name (Optional)</label>
-                            <input value={donorName} onChange={e=>setDonorName(e.target.value)} className="w-full border border-slate-300 rounded p-2" />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label>
-                            <input type="email" required value={email} onChange={e=>setEmail(e.target.value)} className="w-full border border-slate-300 rounded p-2" />
-                        </div>
-                        <button className="w-full bg-slate-800 text-white py-3 rounded-lg font-bold hover:bg-slate-900 shadow-lg">Process Secure Donation</button>
-                    </form>
-                )}
-           </div>
-        </div>
-    );
-};
-
 const AdminPage = (props: any) => {
-    const { userRole, handleLogin, prayers, setPrayers, sermons, setSermons, events, setEvents, meetings, setMeetings, donations, verse, setVerse } = props;
+    const { userRole, handleLogin, prayers, setPrayers, sermons, setSermons, events, setEvents, meetings, setMeetings, verse, setVerse, slideshowImages, setSlideshowImages } = props;
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
-    const [activeTab, setActiveTab] = useState<'SM' | 'EV' | 'MT' | 'PR' | 'DN' | 'SET'>('SM');
+    const [activeTab, setActiveTab] = useState<'SM' | 'EV' | 'MT' | 'PR' | 'SET' | 'SL'>('SL');
 
     const [newSermon, setNewSermon] = useState<Partial<Sermon>>({});
     const [newEvent, setNewEvent] = useState<Partial<Event>>({});
     const [newMeeting, setNewMeeting] = useState<Partial<Meeting>>({});
     const [newVerse, setNewVerse] = useState({text: verse?.text || '', ref: verse?.ref || ''});
+    const [newSlide, setNewSlide] = useState<Partial<SlideshowImage>>({});
 
     const handleAuth = (e: React.FormEvent) => {
         e.preventDefault();
@@ -275,7 +267,7 @@ const AdminPage = (props: any) => {
 
     if (!userRole) {
         return (
-            <div className="flex items-center justify-center h-[80vh] bg-slate-50">
+            <div className="flex items-center justify-center h-[80vh] bg-primary-50">
                 <form onSubmit={handleAuth} className="bg-white p-8 rounded-xl shadow-lg w-96">
                     <h2 className="text-2xl font-bold mb-6 text-center">Staff Login</h2>
                     <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full border border-slate-300 rounded p-3 mb-4" placeholder="Enter Password" />
@@ -307,19 +299,45 @@ const AdminPage = (props: any) => {
     };
     const deleteMeeting = (id: string) => setMeetings(meetings.filter((m: Meeting) => m.id !== id));
     const updateVerse = () => { setVerse({ text: newVerse.text, ref: newVerse.ref }); alert("Verse updated!"); };
+
+    const addSlide = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!newSlide.url) return;
+      setSlideshowImages([{ id: Date.now().toString(), url: newSlide.url, caption: newSlide.caption }, ...slideshowImages]);
+      setNewSlide({});
+    };
+    const deleteSlide = (id: string) => setSlideshowImages(slideshowImages.filter((s: SlideshowImage) => s.id !== id));
     
     return (
         <div className="container mx-auto p-6 pb-20">
             <h2 className="text-3xl font-bold text-slate-800 mb-8">Admin Dashboard</h2>
             <div className="flex flex-col md:flex-row gap-8">
                 <div className="md:w-1/4"><div className="space-y-2 sticky top-24">
-                    {(['SM', 'EV', 'MT', 'PR', 'DN', 'SET'] as const).map(tab => (
-                        <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full text-left px-4 py-2 rounded text-sm font-bold ${activeTab === tab ? 'bg-primary-600 text-white' : 'bg-white hover:bg-slate-50'}`}>
-                            {tab === 'PR' ? 'Prayers' : tab === 'SM' ? 'Sermons' : tab === 'EV' ? 'Events' : tab === 'MT' ? 'Meetings' : tab === 'DN' ? 'Donations' : 'Settings'}
+                    {(['SL', 'SM', 'EV', 'MT', 'PR', 'SET'] as const).map(tab => (
+                        <button key={tab} onClick={() => setActiveTab(tab)} className={`w-full text-left px-4 py-2 rounded text-sm font-bold ${activeTab === tab ? 'bg-primary-600 text-white' : 'bg-white hover:bg-primary-50'}`}>
+                            {tab === 'SL' ? 'Slideshow' : tab === 'PR' ? 'Prayers' : tab === 'SM' ? 'Sermons' : tab === 'EV' ? 'Events' : tab === 'MT' ? 'Meetings' : 'Settings'}
                         </button>
                     ))}
                 </div></div>
                 <div className="md:w-3/4">
+                {activeTab === 'SL' && <div className="space-y-6">
+                    <div className="bg-white rounded-xl shadow p-6">
+                        <h3 className="font-bold text-xl mb-4">Add Slideshow Image</h3>
+                        <form onSubmit={addSlide} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input placeholder="Image URL" value={newSlide.url || ''} onChange={e => setNewSlide({...newSlide, url: e.target.value})} className="w-full border p-2 rounded text-sm md:col-span-2" />
+                            <input placeholder="Caption (Optional)" value={newSlide.caption || ''} onChange={e => setNewSlide({...newSlide, caption: e.target.value})} className="w-full border p-2 rounded text-sm md:col-span-2" />
+                            <button className="w-full bg-primary-600 text-white py-2 rounded font-bold md:col-span-2">Add Image</button>
+                        </form>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                      {slideshowImages.map((s: SlideshowImage) => <div key={s.id} className="bg-white p-2 rounded-xl shadow-sm relative group">
+                        <img src={s.url} alt={s.caption || 'slide'} className="w-full h-24 object-cover rounded" />
+                        <p className="text-xs truncate mt-2 px-1">{s.caption || 'No Caption'}</p>
+                        <button onClick={() => deleteSlide(s.id)} className="absolute top-3 right-3 text-white bg-red-600 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition"><IconTrash className="w-3 h-3" /></button>
+                      </div>)}
+                    </div>
+                </div>}
+
                 {activeTab === 'SM' && <div className="space-y-6">
                     <div className="bg-white rounded-xl shadow p-6">
                         <h3 className="font-bold text-xl mb-4">Add Sermon</h3>
@@ -367,10 +385,6 @@ const AdminPage = (props: any) => {
                     <tbody>{prayers.map((p: PrayerRequest) => <tr key={p.id} className="border-t"><td className="p-4">{p.name}</td><td className="p-4 max-w-xs truncate">{p.content}</td><td className="p-4"><span className={`px-2 py-1 rounded text-xs ${p.status === 'APPROVED' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{p.status}</span></td><td className="p-4 flex gap-2">{p.status === 'PENDING' && <button onClick={() => approvePrayer(p.id)}>Approve</button>}<button onClick={() => deletePrayer(p.id)}>Delete</button></td></tr>)}</tbody>
                 </table></div>}
 
-                 {activeTab === 'DN' && <div className="bg-white rounded-xl shadow overflow-hidden"><div className="p-4 border-b"><h3 className="font-bold">Donations</h3></div><table className="w-full text-sm">
-                    <thead className="bg-slate-50 uppercase"><tr><th className="p-4 text-left">Date</th><th className="p-4 text-left">Name</th><th className="p-4 text-left">Amount</th></tr></thead><tbody>{donations.map((d: Donation) => <tr key={d.id} className="border-t"><td className="p-4">{new Date(d.date).toLocaleDateString()}</td><td className="p-4">{d.name}</td><td className="p-4 font-bold">${d.amount}</td></tr>)}</tbody>
-                 </table></div>}
-
                 {activeTab === 'SET' && <div className="bg-white rounded-xl shadow p-6 space-y-6">
                     <div><h3 className="font-bold mb-2">Verse of the Day</h3><textarea className="w-full border rounded p-2 text-sm" value={newVerse.text} onChange={(e) => setNewVerse({...newVerse, text: e.target.value})} /><input className="w-full border rounded p-2 text-sm mt-2" placeholder="Reference" value={newVerse.ref} onChange={(e) => setNewVerse({...newVerse, ref: e.target.value})} /><button onClick={updateVerse} className="mt-2 bg-primary-600 text-white px-4 py-2 rounded text-sm font-bold">Save Verse</button></div>
                     <div className="pt-6 border-t"><h4 className="font-bold mb-2">Development Tools</h4><div className="flex gap-2">
@@ -407,6 +421,12 @@ const SearchPage = ({ sermons, events, meetings, setPage }: { sermons: Sermon[],
     );
 };
 
+const initialSlideshowImages: SlideshowImage[] = [
+    { id: '1', url: 'https://images.unsplash.com/photo-1507692049484-3a5f6d70a255?q=80&w=2070&auto=format&fit=crop', caption: 'Gathered in Worship' },
+    { id: '2', url: 'https://images.unsplash.com/photo-1543825122-38634563a55a?q=80&w=2070&auto=format&fit=crop', caption: 'Community Fellowship' },
+    { id: '3', url: 'https://images.unsplash.com/photo-1518018863046-562b7b51b279?q=80&w=1943&auto=format&fit=crop', caption: 'Hearing the Word' },
+];
+
 // --- MAIN APP COMPONENT ---
 const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<Page>(Page.HOME);
@@ -417,7 +437,7 @@ const App: React.FC = () => {
   const [events, setEvents] = useStickyState<Event[]>('events', []);
   const [meetings, setMeetings] = useStickyState<Meeting[]>('meetings', []);
   const [prayers, setPrayers] = useStickyState<PrayerRequest[]>('prayers', []);
-  const [donations, setDonations] = useStickyState<Donation[]>('donations', []);
+  const [slideshowImages, setSlideshowImages] = useStickyState<SlideshowImage[]>('slideshowImages', initialSlideshowImages);
   const [videoModal, setVideoModal] = useState<{open: boolean, url: string | null}>({open: false, url: null});
 
   useEffect(() => {
@@ -431,7 +451,6 @@ const App: React.FC = () => {
     setPrayers(prev => prev.map(p => p.id === newPrayer.id ? { ...p, aiResponse: response } : p));
   };
 
-  const handleDonation = (d: Donation) => setDonations(prev => [...prev, d]);
   const handleLogin = (role: UserRole) => { setUserRole(role); setCurrentPage(Page.ADMIN); };
   const openVideoModal = (url: string) => {
       // Basic URL transformation for YouTube embeds
@@ -440,13 +459,12 @@ const App: React.FC = () => {
   }
 
   const pageProps = {
-    [Page.HOME]: { verse, setPage: setCurrentPage },
+    [Page.HOME]: { verse, setPage: setCurrentPage, slideshowImages },
     [Page.SERMONS]: { sermons, openVideoModal },
     [Page.EVENTS]: { events },
     [Page.MEETINGS]: { meetings },
     [Page.PRAYER]: { prayers, handlePrayerSubmit },
-    [Page.GIVING]: { handleDonation },
-    [Page.ADMIN]: { userRole, handleLogin, prayers, setPrayers, sermons, setSermons, events, setEvents, meetings, setMeetings, donations, verse, setVerse },
+    [Page.ADMIN]: { userRole, handleLogin, prayers, setPrayers, sermons, setSermons, events, setEvents, meetings, setMeetings, verse, setVerse, slideshowImages, setSlideshowImages },
     [Page.SEARCH]: { sermons, events, meetings, setPage: setCurrentPage },
   };
 
@@ -456,14 +474,13 @@ const App: React.FC = () => {
     if (currentPage === Page.EVENTS) return <EventsPage {...pageProps[Page.EVENTS]} />;
     if (currentPage === Page.MEETINGS) return <Meetings {...pageProps[Page.MEETINGS]} />;
     if (currentPage === Page.PRAYER) return <PrayerPage {...pageProps[Page.PRAYER]} />;
-    if (currentPage === Page.GIVING) return <GivingPage {...pageProps[Page.GIVING]} />;
     if (currentPage === Page.ADMIN) return <AdminPage {...pageProps[Page.ADMIN]} />;
     if (currentPage === Page.SEARCH) return <SearchPage {...pageProps[Page.SEARCH]} />;
     return <HomePage {...pageProps[Page.HOME]} />;
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-800">
+    <div className="min-h-screen bg-primary-50 font-sans text-slate-800">
       <Navigation activePage={currentPage} setPage={setCurrentPage} role={userRole} onLogout={() => setUserRole(null)} />
       <main className="pb-20 md:pb-0">{renderPage()}</main>
 

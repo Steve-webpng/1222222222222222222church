@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Page, UserRole } from '../types';
-import { IconHome, IconSermon, IconEvent, IconMeeting, IconPrayer, IconGiving, IconAdmin, IconSearch } from './Icons';
+import { IconHome, IconSermon, IconEvent, IconMeeting, IconPrayer, IconAdmin, IconSearch } from './Icons';
 
 interface NavigationProps {
   activePage: Page;
@@ -18,7 +18,6 @@ const Navigation: React.FC<NavigationProps> = ({ activePage, setPage, role, onLo
     { page: Page.EVENTS, icon: <IconEvent className="w-6 h-6" />, label: 'Events' },
     { page: Page.MEETINGS, icon: <IconMeeting className="w-6 h-6" />, label: 'Meet' },
     { page: Page.PRAYER, icon: <IconPrayer className="w-6 h-6" />, label: 'Prayer' },
-    { page: Page.GIVING, icon: <IconGiving className="w-6 h-6" />, label: 'Give' },
   ];
 
   const handleSearch = (e: React.FormEvent) => {
