@@ -162,7 +162,7 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
   useEffect(() => {
       const handleMouseMove = (e: MouseEvent) => {
           if (!isResizing || !resizeRef.current) return;
-          const deltaX = resizeRef.current.startX - e.clientX;
+          const deltaX = e.clientX - resizeRef.current.startX;
           const newWidth = Math.max(200, Math.min(600, resizeRef.current.startWidth + deltaX));
           const newHeight = newWidth * (9/16); // Maintain aspect ratio
           setPipDimensions({ width: newWidth, height: newHeight });
@@ -283,7 +283,7 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings }) => {
                 )}
                 {screenStream && (
                     <div className="absolute bottom-6 right-6 bg-slate-800 border-2 border-slate-600 rounded-xl shadow-2xl overflow-hidden z-30 group" style={{ width: pipDimensions.width, height: pipDimensions.height }}>
-                        <div onMouseDown={startResize} className="absolute top-0 left-0 w-8 h-8 cursor-nwse-resize z-40 flex items-center justify-center bg-black/30 hover:bg-primary-500/80 transition-colors rounded-br-xl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="opacity-80 text-white"><path d="M15 3h6v6M9 21H3v-6" /></svg></div>
+                        <div onMouseDown={startResize} className="absolute bottom-0 right-0 w-6 h-6 cursor-nwse-resize z-40 flex items-center justify-center bg-black/30 hover:bg-primary-500/80 transition-colors rounded-tl-xl opacity-0 group-hover:opacity-100"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="text-white"><path d="M15 3h6v6M9 21H3v-6" /></svg></div>
                          <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover pointer-events-none" />
                          <div className="absolute bottom-2 left-2 text-[10px] bg-black/60 px-2 py-0.5 rounded text-white/90 font-medium backdrop-blur-md">{localUser.name}</div>
                     </div>
