@@ -152,7 +152,9 @@ const Meetings: React.FC<MeetingsPageProps> = ({ meetings, handleShare }) => {
   }, [stream, screenStream, activeMeeting]);
 
   useEffect(() => {
-    if (chatOpen && chatEndRef.current) chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    if (chatOpen && chatEndRef.current) {
+        chatEndRef.current.scrollIntoView();
+    }
   }, [messages, chatOpen]);
 
   const startResize = (e: React.MouseEvent) => {
