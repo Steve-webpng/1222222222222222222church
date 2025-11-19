@@ -1,0 +1,8 @@
+{
+  "name": "1000 Micro Church Network",
+  "description": "A comprehensive platform for micro churches featuring sermons, events, video conferencing, and AI-powered prayer support.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
