@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navigation from './components/Navigation';
 import { Page, UserRole, Sermon, Event, PrayerRequest, Meeting, SlideshowImage } from './types';
 import { getVerseOfDay, seedSermons, seedEvents, generatePrayerResponse } from './services/geminiService';
@@ -258,6 +258,9 @@ const AdminPage = (props: any) => {
     const [newMeeting, setNewMeeting] = useState<Partial<Meeting>>({});
     const [newVerse, setNewVerse] = useState({text: verse?.text || '', ref: verse?.ref || ''});
     const [newSlide, setNewSlide] = useState<Partial<SlideshowImage>>({});
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
 
     const handleAuth = (e: React.FormEvent) => {
         e.preventDefault();
@@ -299,12 +302,32 @@ const AdminPage = (props: any) => {
     };
     const deleteMeeting = (id: string) => setMeetings(meetings.filter((m: Meeting) => m.id !== id));
     const updateVerse = () => { setVerse({ text: newVerse.text, ref: newVerse.ref }); alert("Verse updated!"); };
+    
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const result = reader.result as string;
+                setNewSlide({ ...newSlide, url: result });
+                setImagePreview(result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const addSlide = (e: React.FormEvent) => {
       e.preventDefault();
-      if (!newSlide.url) return;
+      if (!newSlide.url) {
+          alert('Please select an image to upload.');
+          return;
+      }
       setSlideshowImages([{ id: Date.now().toString(), url: newSlide.url, caption: newSlide.caption }, ...slideshowImages]);
       setNewSlide({});
+      setImagePreview(null);
+      if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+      }
     };
     const deleteSlide = (id: string) => setSlideshowImages(slideshowImages.filter((s: SlideshowImage) => s.id !== id));
     
@@ -323,10 +346,21 @@ const AdminPage = (props: any) => {
                 {activeTab === 'SL' && <div className="space-y-6">
                     <div className="bg-white rounded-xl shadow p-6">
                         <h3 className="font-bold text-xl mb-4">Add Slideshow Image</h3>
-                        <form onSubmit={addSlide} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input placeholder="Image URL" value={newSlide.url || ''} onChange={e => setNewSlide({...newSlide, url: e.target.value})} className="w-full border p-2 rounded text-sm md:col-span-2" />
-                            <input placeholder="Caption (Optional)" value={newSlide.caption || ''} onChange={e => setNewSlide({...newSlide, caption: e.target.value})} className="w-full border p-2 rounded text-sm md:col-span-2" />
-                            <button className="w-full bg-primary-600 text-white py-2 rounded font-bold md:col-span-2">Add Image</button>
+                        <form onSubmit={addSlide} className="space-y-4">
+                            <input placeholder="Caption (Optional)" value={newSlide.caption || ''} onChange={e => setNewSlide({...newSlide, caption: e.target.value})} className="w-full border p-2 rounded text-sm" />
+                            <div>
+                               <label className="w-full text-center cursor-pointer bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2 px-4 rounded-lg inline-block">
+                                  Choose Image
+                                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
+                               </label>
+                            </div>
+                            {imagePreview && (
+                                <div className="mt-4">
+                                    <p className="text-xs font-bold text-slate-500 uppercase mb-2">Image Preview</p>
+                                    <img src={imagePreview} alt="Preview" className="w-full max-w-xs h-auto object-cover rounded-lg shadow-md" />
+                                </div>
+                            )}
+                            <button className="w-full bg-primary-600 text-white py-2 rounded font-bold">Add Image</button>
                         </form>
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
