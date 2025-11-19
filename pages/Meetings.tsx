@@ -1,18 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Meeting } from '../types';
-import { IconVideoOff, IconMicOff } from '../components/Icons';
-
-// Mock Meeting Data
-const MOCK_MEETINGS: Meeting[] = [
-  { id: 'm1', title: 'Weekly Prayer Circle', host: 'Pastor John', startTime: 'Today, 7:00 PM', participants: 12 },
-  { id: 'm2', title: 'Youth Bible Study', host: 'Sarah Smith', startTime: 'Tomorrow, 5:00 PM', participants: 8 },
-];
+import { IconVideo, IconVideoOff, IconMic, IconMicOff, IconScreenShare, IconStopScreenShare } from '../components/Icons';
 
 interface MeetingsPageProps {
   userName: string;
+  meetings: Meeting[];
 }
 
-const Meetings: React.FC<MeetingsPageProps> = ({ userName }) => {
+const Meetings: React.FC<MeetingsPageProps> = ({ userName, meetings }) => {
   const [activeMeeting, setActiveMeeting] = useState<Meeting | null>(null);
   const [isInWaitingRoom, setIsInWaitingRoom] = useState(false);
   const [isHost, setIsHost] = useState(false); 
@@ -200,19 +195,27 @@ const Meetings: React.FC<MeetingsPageProps> = ({ userName }) => {
                 
                 {/* Screen Share View or Grid View */}
                 {screenStream ? (
-                     <div className="relative w-full h-full group flex items-center justify-center bg-neutral-900">
+                     <div className="relative w-full h-full group flex items-center justify-center bg-neutral-900 overflow-hidden rounded-lg">
                         <video ref={screenShareRef} autoPlay playsInline className="w-full h-full object-contain" />
                         
                         {/* Screen Share Overlay - Appears on hover */}
-                        <div className="absolute inset-0 bg-slate-900/80 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20 backdrop-blur-sm cursor-default">
-                            <p className="text-white text-2xl font-bold mb-8 drop-shadow-xl tracking-wide select-none">You are currently screen sharing</p>
-                            <button 
-                                onClick={toggleScreenShare}
-                                className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-2xl transform hover:scale-105 transition-all flex items-center gap-3 cursor-pointer ring-4 ring-red-600/30"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>
-                                Stop Sharing
-                            </button>
+                        <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                            <div className="bg-slate-800/60 p-8 rounded-2xl border border-white/10 backdrop-blur-md flex flex-col items-center shadow-2xl transform scale-95 group-hover:scale-100 transition-transform duration-300">
+                                <div className="mb-6 text-center">
+                                    <div className="w-16 h-16 bg-primary-500/20 text-primary-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                                         <IconScreenShare className="w-8 h-8" />
+                                    </div>
+                                    <p className="text-white text-2xl font-bold tracking-wide mb-2">You are currently screen sharing</p>
+                                    <p className="text-slate-300 text-sm">This window is hidden from your audience</p>
+                                </div>
+                                <button 
+                                    onClick={toggleScreenShare}
+                                    className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-full font-bold shadow-lg hover:shadow-red-600/30 transition-all flex items-center gap-3 transform hover:scale-105 ring-4 ring-transparent hover:ring-red-600/20"
+                                >
+                                    <IconStopScreenShare className="w-5 h-5" />
+                                    Stop Sharing
+                                </button>
+                            </div>
                         </div>
                      </div>
                 ) : (
@@ -308,13 +311,13 @@ const Meetings: React.FC<MeetingsPageProps> = ({ userName }) => {
         {/* Controls Footer */}
         <div className="h-20 bg-slate-800 border-t border-slate-700 flex items-center justify-center gap-4 px-6 shrink-0 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] relative z-50">
             <button onClick={() => setMicOn(!micOn)} className={`p-4 rounded-full transition-all shadow-lg transform active:scale-95 ${micOn ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-red-500 text-white hover:bg-red-600'}`} title={micOn ? "Mute Microphone" : "Unmute Microphone"}>
-                {micOn ? <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg> : <IconMicOff className="w-5 h-5" />}
+                {micOn ? <IconMic className="w-5 h-5" /> : <IconMicOff className="w-5 h-5" />}
             </button>
             <button onClick={() => setCameraOn(!cameraOn)} className={`p-4 rounded-full transition-all shadow-lg transform active:scale-95 ${cameraOn ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-red-500 text-white hover:bg-red-600'}`} title={cameraOn ? "Turn Camera Off" : "Turn Camera On"}>
-                {cameraOn ? <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 7l-7 5 7 5V7z"></path><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg> : <IconVideoOff className="w-5 h-5" />}
+                {cameraOn ? <IconVideo className="w-5 h-5" /> : <IconVideoOff className="w-5 h-5" />}
             </button>
-            <button onClick={toggleScreenShare} className={`p-4 rounded-full transition-all shadow-lg transform active:scale-95 ${screenStream ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-slate-700 hover:bg-slate-600 text-white'}`} title="Share Screen">
-                {screenStream ? <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg> : <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 3H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3"></path><path d="M8 21h8"></path><path d="M12 17v4"></path><path d="M17 8l5-5"></path><path d="M17 3h5v5"></path></svg>}
+            <button onClick={toggleScreenShare} className={`p-4 rounded-full transition-all shadow-lg transform active:scale-95 ${screenStream ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-slate-700 hover:bg-slate-600 text-white'}`} title={screenStream ? "Stop Sharing" : "Share Screen"}>
+                {screenStream ? <IconStopScreenShare className="w-5 h-5" /> : <IconScreenShare className="w-5 h-5" />}
             </button>
             <button onClick={() => setChatOpen(!chatOpen)} className={`p-4 rounded-full transition-all shadow-lg transform active:scale-95 hidden md:block relative ${chatOpen ? 'bg-primary-600 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`} title="Chat">
                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
@@ -340,39 +343,49 @@ const Meetings: React.FC<MeetingsPageProps> = ({ userName }) => {
           </button>
       </div>
 
-      <div className="space-y-4">
-        {MOCK_MEETINGS.map(meeting => (
-            <div key={meeting.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 hover:shadow-md transition group">
-                <div className="flex gap-4 items-center w-full md:w-auto">
-                    <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                        <IconVideoOff className="w-6 h-6 rotate-180 transform" />
-                    </div>
-                    <div>
-                        <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary-600 transition-colors">{meeting.title}</h3>
-                        <div className="flex flex-wrap items-center text-slate-500 text-sm mt-1 gap-x-4 gap-y-1">
-                            <span className="flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> {meeting.startTime}</span>
-                            <span className="flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> {meeting.host}</span>
-                            <span className="flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> {meeting.participants} waiting</span>
+      {meetings.length === 0 ? (
+         <div className="text-center py-20 bg-white rounded-xl shadow-sm border border-dashed border-slate-300">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
+               <IconVideo className="w-8 h-8" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-700">No Scheduled Meetings</h3>
+            <p className="text-slate-500 mt-1">Check back later or ask an admin to schedule one.</p>
+         </div>
+      ) : (
+        <div className="space-y-4">
+            {meetings.map(meeting => (
+                <div key={meeting.id} className="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 hover:shadow-md transition group">
+                    <div className="flex gap-4 items-center w-full md:w-auto">
+                        <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                            <IconVideo className="w-6 h-6 transform" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-800 group-hover:text-primary-600 transition-colors">{meeting.title}</h3>
+                            <div className="flex flex-wrap items-center text-slate-500 text-sm mt-1 gap-x-4 gap-y-1">
+                                <span className="flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> {meeting.startTime}</span>
+                                <span className="flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> {meeting.host}</span>
+                                <span className="flex items-center gap-1"><svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> {meeting.participants} waiting</span>
+                            </div>
                         </div>
                     </div>
+                    <div className="flex gap-2 w-full md:w-auto">
+                        <button 
+                        onClick={() => alert(`Link copied: https://1000micro.church/meet/${meeting.id}`)}
+                        className="flex-1 md:flex-none border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition"
+                        >
+                            Copy Link
+                        </button>
+                        <button 
+                        onClick={() => handleJoin(meeting)}
+                        className="flex-1 md:flex-none bg-primary-600 text-white px-6 py-2 rounded-lg text-sm font-bold shadow hover:bg-primary-700 hover:shadow-lg transition transform active:scale-95"
+                        >
+                            Join Now
+                        </button>
+                    </div>
                 </div>
-                <div className="flex gap-2 w-full md:w-auto">
-                     <button 
-                       onClick={() => alert(`Link copied: https://1000micro.church/meet/${meeting.id}`)}
-                       className="flex-1 md:flex-none border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 hover:border-slate-300 transition"
-                     >
-                        Copy Link
-                     </button>
-                     <button 
-                       onClick={() => handleJoin(meeting)}
-                       className="flex-1 md:flex-none bg-primary-600 text-white px-6 py-2 rounded-lg text-sm font-bold shadow hover:bg-primary-700 hover:shadow-lg transition transform active:scale-95"
-                     >
-                        Join Now
-                     </button>
-                </div>
-            </div>
-        ))}
-      </div>
+            ))}
+        </div>
+      )}
       
       <div className="mt-8 p-6 bg-blue-50 rounded-xl border border-blue-100 flex items-start gap-3">
           <svg className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
